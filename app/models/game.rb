@@ -34,6 +34,8 @@ class Game < ApplicationRecord
     raise InvalidCellCoordinateError.new "The given cell coordinate does not exist (#{x}, #{y})" unless cell
 
     cell[:covered] = false
+
+    uncover_surroundings(x, y)
   end
 
   def cell(x, y)
@@ -41,6 +43,18 @@ class Game < ApplicationRecord
   end
 
   private
+
+  def uncover_surroundings(x, y)
+    surroundings = self.class.surrounding_coordinates(height, width, x, y)
+    surroundings.each do |coordinate|
+      cell = cells[coordinate[0]][coordinate[1]]
+      next if cell[:mine] || !cell[:covered]
+
+      cell[:covered] = false
+
+      uncover_surroundings coordinate[1], coordinate[0] unless cell[:near_mines_count] > 0
+    end
+  end
 
   def self.add_mines(mines, number_of_cells, width, height, cells)
     mines_positions = []
@@ -52,18 +66,23 @@ class Game < ApplicationRecord
       x = position % width
       cells[y][x][:mine] = true
 
-      prev_col, next_col = [0, x - 1].max, [width - 1, x + 1].min
-      prev_row, next_row = [0, y - 1].max, [height - 1, y + 1].min
-      surroundings = Set[
-        [prev_row, x], [prev_row, prev_col], [prev_row, next_col], [y, next_col],
-        [y, prev_col], [next_row, x], [next_row, prev_col], [next_row, next_col]
-      ]
+      surroundings = surrounding_coordinates(height, width, x, y)
       surroundings.each do |coordinate|
         cells[coordinate[0]][coordinate[1]][:near_mines_count] += 1
       end
     end
 
     cells
+  end
+
+  def self.surrounding_coordinates(height, width, x, y)
+    prev_col, next_col = [0, x - 1].max, [width - 1, x + 1].min
+    prev_row, next_row = [0, y - 1].max, [height - 1, y + 1].min
+
+    Set[
+      [prev_row, x], [prev_row, prev_col], [prev_row, next_col], [y, next_col],
+      [y, prev_col], [next_row, x], [next_row, prev_col], [next_row, next_col]
+    ]
   end
 
   def self.mine_position(mines_positions, number_of_cells)
