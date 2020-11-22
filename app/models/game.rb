@@ -20,7 +20,7 @@ class Game < ApplicationRecord
       x = position / width
       y = position % width
       result[x] = {} unless result[x]
-      result[x][y] = {mine: true}
+      result[x][y] = { mine: true, covered: true }
 
       result
     end
@@ -30,7 +30,7 @@ class Game < ApplicationRecord
       next if cells.dig(x, y)
 
       cells[x] = {} unless cells[x]
-      cells[x][y] = {mine: false}
+      cells[x][y] = { mine: false, covered: true }
     end
 
     Game.new(height: height, width: width, cells: cells)
@@ -38,6 +38,13 @@ class Game < ApplicationRecord
 
   def mines
     cells.map { |_, v| v.filter { |_, vv| vv[:mine] } }
+  end
+
+  def uncover_cell(x, y)
+    cell = cells.dig(y, x)
+    raise InvalidCellCoordinateError.new "The given cell coordinate does not exist (#{x}, #{y})" unless cell
+
+    cell[:covered] = false
   end
 
   private
@@ -51,3 +58,4 @@ class Game < ApplicationRecord
 end
 
 class InvalidGameParamError < RuntimeError; end
+class InvalidCellCoordinateError < RuntimeError; end
