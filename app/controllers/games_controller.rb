@@ -1,7 +1,7 @@
 class GamesController < ApplicationController
   def create
     begin
-      new_game = Game.generate(params[:height].to_i, params[:width].to_i, params[:mines].to_i)
+      new_game = Game.generate(height: params[:height].to_i, width: params[:width].to_i, mines: params[:mines].to_i)
       new_game.save!
     rescue InvalidGameParamError => e
       return render_error e.message, :bad_request
@@ -16,7 +16,6 @@ class GamesController < ApplicationController
     y = params[:y].to_i
 
     game.uncover_cell x.to_i, y.to_i
-
     game.save!
 
     head :ok

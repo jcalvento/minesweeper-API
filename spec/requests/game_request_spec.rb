@@ -39,7 +39,7 @@ RSpec.describe 'Games', type: :request do
 
   describe :update do
     let(:game) do
-      game = Game.generate(4, 5, 8)
+      game = Game.generate(height: 4, width: 5, mines: 8)
       game.save!
       game
     end
@@ -49,7 +49,7 @@ RSpec.describe 'Games', type: :request do
 
       updated_game = Game.find(game.id)
       expect(response.status).to eq 200
-      expect(updated_game.cells[3][4][:covered]).to be false
+      expect(updated_game.cell(4, 3)[:covered]).to be false
     end
 
     context 'validations' do

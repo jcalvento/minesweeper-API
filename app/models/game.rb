@@ -9,7 +9,7 @@ class Game < ApplicationRecord
     end
   end
 
-  def self.generate(height, width, mines)
+  def self.generate(height:, width:, mines:)
     self.validate_params(height, width, mines)
     number_of_cells = height * width
     mines_positions = []
@@ -41,10 +41,14 @@ class Game < ApplicationRecord
   end
 
   def uncover_cell(x, y)
-    cell = cells.dig(y, x)
+    cell = cell(x, y)
     raise InvalidCellCoordinateError.new "The given cell coordinate does not exist (#{x}, #{y})" unless cell
 
     cell[:covered] = false
+  end
+
+  def cell(x, y)
+    cells.dig(y, x)
   end
 
   private

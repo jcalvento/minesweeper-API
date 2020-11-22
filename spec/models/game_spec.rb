@@ -10,7 +10,7 @@ RSpec.describe Game, type: :model do
 
   describe '.generate' do
     it 'creates the given number of cells and mines, all covered' do
-      game = Game.generate(5, 7, 8)
+      game = Game.generate(height: 5, width: 7, mines: 8)
 
       expect(game.mines.sum { |position| position.size }).to eq(8)
       expect(game.cells.sum { |_, v| v.size }).to eq(35)
