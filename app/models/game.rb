@@ -63,7 +63,7 @@ class Game < ApplicationRecord
     surroundings = self.class.surrounding_coordinates(height, width, x, y)
     surroundings.each do |coordinate|
       cell = cells[coordinate[0]][coordinate[1]]
-      next if cell[:mine] || !cell[:covered]
+      next if cell[:mine] || !cell[:covered] || cell[:flag]
 
       cell[:covered] = false
 

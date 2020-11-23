@@ -57,9 +57,9 @@ RSpec.describe Game, type: :model do
     context 'uncovering surrounding cells' do
       let(:game) { Game.generate(height: 4, width: 3, mines: 1) }
 
-      it 'when marking the cell as uncovered, all surrounding not mined cells will be uncovered' do
-        allow(Game).to receive(:mine_position).and_return 7
+      before { allow(Game).to receive(:mine_position).and_return 7 }
 
+      it 'when marking the cell as uncovered, all surrounding not mined cells will be uncovered' do
         game.uncover_cell 0, 0
 
         assert_is_uncovered(game, 0, 0)
@@ -73,6 +73,26 @@ RSpec.describe Game, type: :model do
         assert_is_covered(game, 0, 3)
         assert_is_covered(game, 1, 3)
         assert_is_covered(game, 2, 3)
+      end
+
+      context 'when a surrounding cell is marked' do
+        it 'does not uncover it' do
+          game.question_mark_flag 1, 0
+
+          game.uncover_cell 0, 0
+
+          assert_is_uncovered(game, 0, 0)
+          assert_is_uncovered(game, 0, 1)
+          assert_is_uncovered(game, 1, 1)
+          assert_is_covered(game, 1, 0)
+          assert_is_covered(game, 2, 0)
+          assert_is_covered(game, 0, 2)
+          assert_is_covered(game, 1, 2)
+          assert_is_covered(game, 2, 2)
+          assert_is_covered(game, 0, 3)
+          assert_is_covered(game, 1, 3)
+          assert_is_covered(game, 2, 3)
+        end
       end
     end
   end

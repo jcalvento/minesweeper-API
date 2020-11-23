@@ -45,11 +45,27 @@ RSpec.describe 'Games', type: :request do
     end
 
     it 'updates the given cell of the given game' do
-      put "/games", params: { id: game.id, x: 4, y: 3 }
+      put "/games", params: { id: game.id, x: 4, y: 3, command: 'uncover' }
 
       updated_game = Game.find(game.id)
       expect(response.status).to eq 200
       expect(updated_game.cell(4, 3)).to_not be_covered
+    end
+
+    it 'updates the given cell with a red flag' do
+      put "/games", params: { id: game.id, x: 1, y: 2, command: 'red_flag' }
+
+      updated_game = Game.find(game.id)
+      expect(response.status).to eq 200
+      expect(updated_game.cell(1, 2).flag).to eq Cell::RED_FLAG
+    end
+
+    it 'updates the given cell with a question mark flag' do
+      put "/games", params: { id: game.id, x: 1, y: 2, command: 'question_mark' }
+
+      updated_game = Game.find(game.id)
+      expect(response.status).to eq 200
+      expect(updated_game.cell(1, 2).flag).to eq Cell::QUESTION_MARK_FLAG
     end
 
     context 'validations' do
@@ -75,8 +91,8 @@ RSpec.describe 'Games', type: :request do
         end
       end
 
-      it_behaves_like 'returns a 400 response when a param is invalid', 'height', { x: 100, y: 4 }
-      it_behaves_like 'returns a 400 response when a param is invalid', 'width', { x: 3, y: 400 }
+      it_behaves_like 'returns a 400 response when a param is invalid', 'height', { x: 100, y: 4, command: 'red_flag' }
+      it_behaves_like 'returns a 400 response when a param is invalid', 'width', { x: 3, y: 400, command: 'uncover' }
     end
   end
 end
