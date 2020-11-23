@@ -43,6 +43,17 @@ RSpec.describe Game, type: :model do
       assert_is_uncovered(game, x, y)
     end
 
+    context 'uncovering a mined cell' do
+      let(:game) { Game.generate(height: 4, width: 3, mines: 3) }
+
+      before { allow(Game).to receive(:mine_position).and_return 7, 8, 6 }
+
+      it 'finished the game with a failed status' do
+        expect { game.uncover_cell 0, 2 }.to change(game, :ended?).from(false).to(true).
+          and change(game, :result).from(nil).to(Game::FAILED)
+      end
+    end
+
     context 'an already uncovered cell' do
       it 'when marking the cell as uncovered it leaves the same' do
         x, y = 0, 2
@@ -92,6 +103,18 @@ RSpec.describe Game, type: :model do
           assert_is_covered(game, 0, 3)
           assert_is_covered(game, 1, 3)
           assert_is_covered(game, 2, 3)
+        end
+      end
+
+      context 'when the given cell has adjacent mines' do
+        it 'does not uncover any other cell' do
+          x, y = 0, 1
+          game.uncover_cell x, y
+
+          expect(game.cell(x, y).near_mines_count).to eq 1
+          expect(game.cells.all? { |y_position, v|
+            v.all? { |x_position, vv| y_position.eql?(y) && x_position.eql?(x) || vv[:covered] }
+          }).to be true
         end
       end
     end
@@ -152,6 +175,33 @@ RSpec.describe Game, type: :model do
     end
   end
 
+  describe 'ending game' do
+    let(:game) { Game.generate(height: 3, width: 3, mines: 3) }
+
+    before { allow(Game).to receive(:mine_position).and_return 7, 6, 8 }
+
+    context 'uncovering the last cells' do
+      it 'ends game with success result' do
+        game.red_flag 0, 2
+        game.red_flag 1, 2
+        game.red_flag 2, 2
+
+        expect{ game.uncover_cell 0, 0 }.to change(game, :ended?).from(false).to(true).
+          and change(game, :result).from(nil).to(Game::SUCCESS)
+      end
+    end
+
+    context 'red flag last mine' do
+      it 'ends game with success result' do
+        game.uncover_cell 0, 0
+        game.red_flag 0, 2
+        game.red_flag 1, 2
+
+        expect{ game.red_flag 2, 2 }.to change(game, :ended?).from(false).to(true).
+          and change(game, :result).from(nil).to(Game::SUCCESS)
+      end
+    end
+  end
   def assert_is_uncovered(game, x, y)
     expect(game.cell(x, y)).to_not be_covered
   end

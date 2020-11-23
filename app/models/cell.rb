@@ -18,6 +18,8 @@ class Cell
 
   def red_flag
     updating_game { @flag = RED_FLAG }
+
+    @game.red_flagged_mined_cell if mined?
   end
 
   def question_mark_flag
@@ -33,17 +35,25 @@ class Cell
   end
 
   def uncover
-    updating_game do
-      @covered = false
+    unless flagged? || !covered?
+      updating_game { @covered = false }
 
-      @game.uncover_surroundings self.x_position, self.y_position
-    end unless flagged?
+      return @game.end_game_failed if mined?
+
+      @game.uncovered_cell
+
+      @game.uncover_surroundings self.x_position, self.y_position unless has_adjacent_mines?
+    end
+  end
+
+  def has_adjacent_mines?
+    near_mines_count > 0
   end
 
   private
 
-  def updating_game(&block)
-    block.call
+  def updating_game
+    yield
 
     @game.update_cell self
   end

@@ -2,6 +2,9 @@ class Game < ApplicationRecord
   serialize :cells
   validates :height, :width, presence: true, numericality: true
 
+  FAILED = 'failed'.freeze
+  SUCCESS = 'success'.freeze
+
   def self.validate_params(height, width, mines)
     if [height, width, mines].any? { |param| param <= 0 }
       raise InvalidGameParamError.new 'Height, width and number of mines must be greater than 0'
@@ -62,16 +65,39 @@ class Game < ApplicationRecord
   def uncover_surroundings(x, y)
     surroundings = self.class.surrounding_coordinates(height, width, x, y)
     surroundings.each do |coordinate|
-      cell = cells[coordinate[0]][coordinate[1]]
-      next if cell[:mine] || !cell[:covered] || cell[:flag]
+      cell = cell(coordinate[1], coordinate[0])
+      next if cell.mined?
 
-      cell[:covered] = false
-
-      uncover_surroundings coordinate[1], coordinate[0] unless cell[:near_mines_count] > 0
+      cell.uncover
     end
   end
 
+  def red_flagged_mined_cell
+    update_game_status { self.mines_flagged += 1 }
+  end
+
+  def uncovered_cell
+    update_game_status { self.uncovered_cells += 1 }
+  end
+
+  def end_game_failed
+    self.ended = true
+    self.result = FAILED
+  end
+
   private
+
+  def update_game_status
+    yield
+
+    cells_count = height * width
+    mines_count = mines.count
+
+    if self.mines_flagged.eql?(mines_count) && self.uncovered_cells.eql?(cells_count - mines_count)
+      self.ended = true
+      self.result = SUCCESS
+    end
+  end
 
   def self.add_mines(mines, number_of_cells, width, height, cells)
     mines_positions = []

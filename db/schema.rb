@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_11_22_053707) do
+ActiveRecord::Schema.define(version: 2020_11_23_140220) do
 
   create_table "games", force: :cascade do |t|
     t.integer "height"
@@ -18,6 +18,10 @@ ActiveRecord::Schema.define(version: 2020_11_22_053707) do
     t.string "cells"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.boolean "ended", default: false
+    t.string "result"
+    t.integer "mines_flagged", default: 0
+    t.integer "uncovered_cells", default: 0
   end
 
 end
