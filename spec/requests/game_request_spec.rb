@@ -49,7 +49,7 @@ RSpec.describe 'Games', type: :request do
 
       updated_game = Game.find(game.id)
       expect(response.status).to eq 200
-      expect(updated_game.cell(4, 3)[:covered]).to be false
+      expect(updated_game.cell(4, 3)).to_not be_covered
     end
 
     context 'validations' do

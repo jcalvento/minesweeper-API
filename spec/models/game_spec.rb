@@ -22,13 +22,13 @@ RSpec.describe Game, type: :model do
 
       game = Game.generate(height: 4, width: 4, mines: 2)
 
-      expect(game.cell(1, 0)[:near_mines_count]).to eq 1
-      expect(game.cell(3, 0)[:near_mines_count]).to eq 2
-      expect(game.cell(3, 0)[:near_mines_count]).to eq 2
-      expect(game.cell(1, 1)[:near_mines_count]).to eq 1
-      expect(game.cell(1, 2)[:near_mines_count]).to eq 1
-      expect(game.cell(2, 2)[:near_mines_count]).to eq 2
-      expect(game.cell(3, 2)[:near_mines_count]).to eq 2
+      expect(game.cell(1, 0).near_mines_count).to eq 1
+      expect(game.cell(3, 0).near_mines_count).to eq 2
+      expect(game.cell(3, 0).near_mines_count).to eq 2
+      expect(game.cell(1, 1).near_mines_count).to eq 1
+      expect(game.cell(1, 2).near_mines_count).to eq 1
+      expect(game.cell(2, 2).near_mines_count).to eq 2
+      expect(game.cell(3, 2).near_mines_count).to eq 2
     end
   end
 
@@ -85,7 +85,7 @@ RSpec.describe Game, type: :model do
 
       game.red_flag x, y
 
-      expect(game.cell(x, y)[:flag]).to eq Game::RED_FLAG
+      expect(game.cell(x, y)).to be_flagged
     end
 
     it 'does not uncover the cell when there is a red flag on it' do
@@ -94,7 +94,7 @@ RSpec.describe Game, type: :model do
 
       game.uncover_cell x, y
 
-      expect(game.cell(x, y)[:covered]).to be true
+      assert_is_covered(game, x, y)
     end
   end
 
@@ -106,7 +106,7 @@ RSpec.describe Game, type: :model do
 
       game.question_mark_flag x, y
 
-      expect(game.cell(x, y)[:flag]).to eq Game::QUESTION_MARK_FLAG
+      expect(game.cell(x, y)).to be_flagged
     end
 
     it 'does not uncover the cell when there is a question mark flag on it' do
@@ -115,7 +115,7 @@ RSpec.describe Game, type: :model do
 
       game.uncover_cell x, y
 
-      expect(game.cell(x, y)[:covered]).to be true
+      assert_is_covered(game, x, y)
     end
   end
 
@@ -128,15 +128,15 @@ RSpec.describe Game, type: :model do
 
       game.delete_flag x, y
 
-      expect(game.cell(x, y)[:flag]).to be_nil
+      expect(game.cell(x, y)).to_not be_flagged
     end
   end
 
   def assert_is_uncovered(game, x, y)
-    expect(game.cell(x, y)[:covered]).to eq false
+    expect(game.cell(x, y)).to_not be_covered
   end
 
   def assert_is_covered(game, x, y)
-    expect(game.cell(x, y)[:covered]).to eq true
+    expect(game.cell(x, y)).to be_covered
   end
 end

@@ -1,6 +1,4 @@
 class Game < ApplicationRecord
-  RED_FLAG = 'red_flag'.freeze
-  QUESTION_MARK_FLAG = 'question_mark_flag'.freeze
   serialize :cells
   validates :height, :width, presence: true, numericality: true
 
@@ -18,7 +16,7 @@ class Game < ApplicationRecord
       y = index % width
 
       result[x] = {} unless result[x]
-      result[x][y] = { mine: false, covered: true, near_mines_count: 0 }
+      result[x][y] = { mine: false, covered: true, near_mines_count: 0, flag: nil }
       result
     end
     cells = add_mines(mines, number_of_cells, width, height, cells)
@@ -31,32 +29,35 @@ class Game < ApplicationRecord
   end
 
   def uncover_cell(x, y)
-    cell = cell(x, y)
-    return if cell[:flag]
-    raise InvalidCellCoordinateError.new "The given cell coordinate does not exist (#{x}, #{y})" unless cell
-
-    cell[:covered] = false
-
-    uncover_surroundings(x, y)
+    cell(x, y).uncover
   end
 
   def cell(x, y)
-    cells.dig(y, x)
+    cell = cells.dig(y, x)
+    raise InvalidCellCoordinateError.new "The given cell coordinate does not exist (#{x}, #{y})" unless cell
+
+    Cell.new game: self, x: x, y: y, **cell
   end
 
   def red_flag(x, y)
-    cell(x, y)[:flag] = RED_FLAG
+    cell(x, y).red_flag
   end
 
   def question_mark_flag(x, y)
-    cell(x, y)[:flag] = QUESTION_MARK_FLAG
+    cell(x, y).question_mark_flag
   end
 
   def delete_flag(x, y)
-    cell(x, y).delete :flag
+    cell(x, y).delete_flag
   end
 
-  private
+  def update_cell(cell)
+    cells[cell.y_position][cell.x_position].merge!({
+      covered: cell.covered?,
+      mine: cell.mined?,
+      flag: cell.flag
+    })
+  end
 
   def uncover_surroundings(x, y)
     surroundings = self.class.surrounding_coordinates(height, width, x, y)
@@ -69,6 +70,8 @@ class Game < ApplicationRecord
       uncover_surroundings coordinate[1], coordinate[0] unless cell[:near_mines_count] > 0
     end
   end
+
+  private
 
   def self.add_mines(mines, number_of_cells, width, height, cells)
     mines_positions = []
