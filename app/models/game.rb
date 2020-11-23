@@ -19,7 +19,7 @@ class Game < ApplicationRecord
       y = index % width
 
       result[x] = {} unless result[x]
-      result[x][y] = { mine: false, covered: true, near_mines_count: 0, flag: nil }
+      result[x][y] = { mine: false, covered: true, adjacent_mines_count: 0, flag: nil }
       result
     end
     cells = add_mines(mines, number_of_cells, width, height, cells)
@@ -111,7 +111,7 @@ class Game < ApplicationRecord
 
       surroundings = surrounding_coordinates(height, width, x, y)
       surroundings.each do |coordinate|
-        cells[coordinate[0]][coordinate[1]][:near_mines_count] += 1
+        cells[coordinate[0]][coordinate[1]][:adjacent_mines_count] += 1
       end
     end
 

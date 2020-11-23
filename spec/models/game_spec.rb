@@ -22,13 +22,13 @@ RSpec.describe Game, type: :model do
 
       game = Game.generate(height: 4, width: 4, mines: 2)
 
-      expect(game.cell(1, 0).near_mines_count).to eq 1
-      expect(game.cell(3, 0).near_mines_count).to eq 2
-      expect(game.cell(3, 0).near_mines_count).to eq 2
-      expect(game.cell(1, 1).near_mines_count).to eq 1
-      expect(game.cell(1, 2).near_mines_count).to eq 1
-      expect(game.cell(2, 2).near_mines_count).to eq 2
-      expect(game.cell(3, 2).near_mines_count).to eq 2
+      expect(game.cell(1, 0).adjacent_mines_count).to eq 1
+      expect(game.cell(3, 0).adjacent_mines_count).to eq 2
+      expect(game.cell(3, 0).adjacent_mines_count).to eq 2
+      expect(game.cell(1, 1).adjacent_mines_count).to eq 1
+      expect(game.cell(1, 2).adjacent_mines_count).to eq 1
+      expect(game.cell(2, 2).adjacent_mines_count).to eq 2
+      expect(game.cell(3, 2).adjacent_mines_count).to eq 2
     end
   end
 
@@ -111,7 +111,7 @@ RSpec.describe Game, type: :model do
           x, y = 0, 1
           game.uncover_cell x, y
 
-          expect(game.cell(x, y).near_mines_count).to eq 1
+          expect(game.cell(x, y).adjacent_mines_count).to eq 1
           expect(game.cells.all? { |y_position, v|
             v.all? { |x_position, vv| y_position.eql?(y) && x_position.eql?(x) || vv[:covered] }
           }).to be true

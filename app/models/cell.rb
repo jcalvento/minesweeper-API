@@ -2,17 +2,17 @@ class Cell
   RED_FLAG = 'red_flag'.freeze
   QUESTION_MARK_FLAG = 'question_mark_flag'.freeze
 
-  def initialize(mine:, covered:, near_mines_count:, flag:, game:, x:, y:)
+  def initialize(mine:, covered:, adjacent_mines_count:, flag:, game:, x:, y:)
     @mine = mine
     @covered = covered
-    @near_mines_count = near_mines_count
+    @adjacent_mines_count = adjacent_mines_count
     @flag = flag
     @game = game
     @x_position = x
     @y_position = y
   end
 
-  attr_accessor :near_mines_count, :flag, :x_position, :y_position, :mine, :covered
+  attr_accessor :adjacent_mines_count, :flag, :x_position, :y_position, :mine, :covered
   alias_method :mined?, :mine
   alias_method :covered?, :covered
 
@@ -47,7 +47,7 @@ class Cell
   end
 
   def has_adjacent_mines?
-    near_mines_count > 0
+    adjacent_mines_count > 0
   end
 
   private
