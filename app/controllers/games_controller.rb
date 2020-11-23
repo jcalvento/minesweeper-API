@@ -8,7 +8,7 @@ class GamesController < ApplicationController
       return render_error e.message, :bad_request
     end
 
-    render :json => {id: new_game.id}
+    render :json => new_game.as_json
   end
 
   def update
@@ -19,7 +19,7 @@ class GamesController < ApplicationController
 
     game.save!
 
-    head :ok
+    render :json => game.as_json
   rescue ActiveRecord::RecordNotFound => e
     render_error e.message, :not_found
   rescue InvalidCellCoordinateError, InvalidCommandError => e

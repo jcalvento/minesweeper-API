@@ -7,13 +7,19 @@ RSpec.describe 'Games', type: :request do
         post "/games", params: { height: 6, width: 5, mines: 9 }
       }.to change(Game, :count).by(1)
 
-      game_id = JSON.parse(response.body)["id"]
+      json_response = JSON.parse(response.body)
+      game_id = json_response["id"]
       new_game = Game.find(game_id)
       expect(response.status).to eq 200
       expect(new_game.height).to eq(6)
       expect(new_game.width).to eq(5)
       expect(new_game.mines.sum { |position| position.size }).to eq(9)
       expect(new_game.cells.sum { |_, v| v.size }).to eq(30)
+      expect(new_game.mines_flagged).to eq(0)
+      expect(new_game.uncovered_cells).to eq(0)
+      expect(new_game).to_not be_ended
+      expect(new_game.result).to be_nil
+      assert_response_includes_game_fields(json_response, new_game)
     end
 
     context 'validations' do
@@ -50,6 +56,7 @@ RSpec.describe 'Games', type: :request do
       updated_game = Game.find(game.id)
       expect(response.status).to eq 200
       expect(updated_game.cell(4, 3)).to_not be_covered
+      assert_response_includes_game_fields(JSON.parse(response.body), updated_game)
     end
 
     it 'updates the given cell with a red flag' do
@@ -58,6 +65,7 @@ RSpec.describe 'Games', type: :request do
       updated_game = Game.find(game.id)
       expect(response.status).to eq 200
       expect(updated_game.cell(1, 2).flag).to eq Cell::RED_FLAG
+      assert_response_includes_game_fields(JSON.parse(response.body), updated_game)
     end
 
     it 'updates the given cell with a question mark flag' do
@@ -66,6 +74,7 @@ RSpec.describe 'Games', type: :request do
       updated_game = Game.find(game.id)
       expect(response.status).to eq 200
       expect(updated_game.cell(1, 2).flag).to eq Cell::QUESTION_MARK_FLAG
+      assert_response_includes_game_fields(JSON.parse(response.body), updated_game)
     end
 
     context 'validations' do
@@ -105,4 +114,13 @@ RSpec.describe 'Games', type: :request do
       it_behaves_like 'returns a 400 response when a param is invalid', 'width', { x: 3, y: 400, command: 'uncover' }
     end
   end
+end
+
+def assert_response_includes_game_fields(json_response, game)
+  expect(game.height).to eq(json_response['height'])
+  expect(game.mines_flagged).to eq(json_response['mines_flagged'])
+  expect(game.uncovered_cells).to eq(json_response['uncovered_cells'])
+  expect(game.ended?).to eq(json_response['ended'])
+  expect(game.result).to eq(json_response['result'])
+  expect(game.cells.as_json).to eq(json_response['cells'])
 end
