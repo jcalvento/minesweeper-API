@@ -77,6 +77,61 @@ RSpec.describe Game, type: :model do
     end
   end
 
+  describe '#red_flag' do
+    let(:game) { Game.generate(height: 3, width: 3, mines: 3) }
+
+    it 'marks the given cell with a red flag' do
+      x, y = 0, 1
+
+      game.red_flag x, y
+
+      expect(game.cell(x, y)[:flag]).to eq Game::RED_FLAG
+    end
+
+    it 'does not uncover the cell when there is a red flag on it' do
+      x, y = 1, 1
+      game.red_flag x, y
+
+      game.uncover_cell x, y
+
+      expect(game.cell(x, y)[:covered]).to be true
+    end
+  end
+
+  describe '#question_mark_flag' do
+    let(:game) { Game.generate(height: 4, width: 3, mines: 2) }
+
+    it 'marks the given cell with a question mark flag' do
+      x, y = 2, 3
+
+      game.question_mark_flag x, y
+
+      expect(game.cell(x, y)[:flag]).to eq Game::QUESTION_MARK_FLAG
+    end
+
+    it 'does not uncover the cell when there is a question mark flag on it' do
+      x, y = 1, 1
+      game.question_mark_flag x, y
+
+      game.uncover_cell x, y
+
+      expect(game.cell(x, y)[:covered]).to be true
+    end
+  end
+
+  describe '#delete_flag' do
+    let(:game) { Game.generate(height: 2, width: 3, mines: 2) }
+
+    it 'remove the current flag of the given cell' do
+      x, y = 2, 1
+      game.question_mark_flag x, y
+
+      game.delete_flag x, y
+
+      expect(game.cell(x, y)[:flag]).to be_nil
+    end
+  end
+
   def assert_is_uncovered(game, x, y)
     expect(game.cell(x, y)[:covered]).to eq false
   end

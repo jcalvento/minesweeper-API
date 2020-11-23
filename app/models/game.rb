@@ -1,5 +1,6 @@
 class Game < ApplicationRecord
-  MINE = 'Mine'.freeze
+  RED_FLAG = 'red_flag'.freeze
+  QUESTION_MARK_FLAG = 'question_mark_flag'.freeze
   serialize :cells
   validates :height, :width, presence: true, numericality: true
 
@@ -31,6 +32,7 @@ class Game < ApplicationRecord
 
   def uncover_cell(x, y)
     cell = cell(x, y)
+    return if cell[:flag]
     raise InvalidCellCoordinateError.new "The given cell coordinate does not exist (#{x}, #{y})" unless cell
 
     cell[:covered] = false
@@ -40,6 +42,18 @@ class Game < ApplicationRecord
 
   def cell(x, y)
     cells.dig(y, x)
+  end
+
+  def red_flag(x, y)
+    cell(x, y)[:flag] = RED_FLAG
+  end
+
+  def question_mark_flag(x, y)
+    cell(x, y)[:flag] = QUESTION_MARK_FLAG
+  end
+
+  def delete_flag(x, y)
+    cell(x, y).delete :flag
   end
 
   private
