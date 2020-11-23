@@ -1,5 +1,6 @@
 require 'rails_helper'
 
+
 RSpec.describe 'Games', type: :request do
   describe :create do
     it 'creates a new game of the given size and number of mines' do
@@ -7,8 +8,7 @@ RSpec.describe 'Games', type: :request do
         post "/games", params: { height: 6, width: 5, mines: 9 }
       }.to change(Game, :count).by(1)
 
-      json_response = JSON.parse(response.body)
-      game_id = json_response["id"]
+      game_id = json_body["id"]
       new_game = Game.find(game_id)
       expect(response.status).to eq 200
       expect(new_game.height).to eq(6)
@@ -19,7 +19,7 @@ RSpec.describe 'Games', type: :request do
       expect(new_game.uncovered_cells).to eq(0)
       expect(new_game).to_not be_ended
       expect(new_game.result).to be_nil
-      assert_response_includes_game_fields(json_response, new_game)
+      assert_response_includes_game_fields(json_body, new_game)
     end
 
     context 'validations' do
@@ -29,7 +29,7 @@ RSpec.describe 'Games', type: :request do
             post "/games", params: request_params
           }.to_not change(Game, :count)
 
-          errors = JSON.parse(response.body)["errors"]
+          errors = json_body["errors"]
           error = errors[0]
           expect(response.status).to eq 400
           expect(errors.size).to eq 1
@@ -51,37 +51,37 @@ RSpec.describe 'Games', type: :request do
     end
 
     it 'updates the given cell of the given game' do
-      put "/games", params: { id: game.id, x: 4, y: 3, command: 'uncover' }
+      put "/games/#{game.id}", params: { x: 4, y: 3, command: 'uncover' }
 
       updated_game = Game.find(game.id)
       expect(response.status).to eq 200
       expect(updated_game.cell(4, 3)).to_not be_covered
-      assert_response_includes_game_fields(JSON.parse(response.body), updated_game)
+      assert_response_includes_game_fields(json_body, updated_game)
     end
 
     it 'updates the given cell with a red flag' do
-      put "/games", params: { id: game.id, x: 1, y: 2, command: 'red_flag' }
+      put "/games/#{game.id}", params: { x: 1, y: 2, command: 'red_flag' }
 
       updated_game = Game.find(game.id)
       expect(response.status).to eq 200
       expect(updated_game.cell(1, 2).flag).to eq Cell::RED_FLAG
-      assert_response_includes_game_fields(JSON.parse(response.body), updated_game)
+      assert_response_includes_game_fields(json_body, updated_game)
     end
 
     it 'updates the given cell with a question mark flag' do
-      put "/games", params: { id: game.id, x: 1, y: 2, command: 'question_mark' }
+      put "/games/#{game.id}", params: { x: 1, y: 2, command: 'question_mark' }
 
       updated_game = Game.find(game.id)
       expect(response.status).to eq 200
       expect(updated_game.cell(1, 2).flag).to eq Cell::QUESTION_MARK_FLAG
-      assert_response_includes_game_fields(JSON.parse(response.body), updated_game)
+      assert_response_includes_game_fields(json_body, updated_game)
     end
 
     context 'validations' do
       it 'returns a 404 error when the game does not exist' do
-        put "/games", params: { id: "something", x: 3, y: 4 }
+        put "/games/something", params: { x: 3, y: 4 }
 
-        errors = JSON.parse(response.body)["errors"]
+        errors = json_body["errors"]
         error = errors[0]
         expect(response.status).to eq 404
         expect(errors.size).to eq 1
@@ -89,9 +89,9 @@ RSpec.describe 'Games', type: :request do
       end
 
       it 'returns a 404 error when the given command is invalid' do
-        put "/games", params: { id: game.id, x: 3, y: 4, command: 'invalid' }
+        put "/games/#{game.id}", params: { x: 3, y: 4, command: 'invalid' }
 
-        errors = JSON.parse(response.body)["errors"]
+        errors = json_body["errors"]
         error = errors[0]
         expect(response.status).to eq 400
         expect(errors.size).to eq 1
@@ -100,9 +100,9 @@ RSpec.describe 'Games', type: :request do
 
       shared_examples 'returns a 400 response when a param is invalid' do |param_name, request_params|
         it "returns a 400 response when #{param_name} is invalid" do
-          put "/games", params: request_params.merge(id: game.id)
+          put "/games/#{game.id}", params: request_params
 
-          errors = JSON.parse(response.body)["errors"]
+          errors = json_body["errors"]
           error = errors[0]
           expect(response.status).to eq 400
           expect(errors.size).to eq 1
@@ -114,6 +114,47 @@ RSpec.describe 'Games', type: :request do
       it_behaves_like 'returns a 400 response when a param is invalid', 'width', { x: 3, y: 400, command: 'uncover' }
     end
   end
+
+  describe :index do
+    it 'returns the list of existing games' do
+      game = Game.generate(height: 2, width: 3, mines: 3)
+      game.save!
+      another_game = Game.generate(height: 2, width: 3, mines: 3)
+      another_game.save!
+
+      get '/games'
+
+      expect(response.status).to eq 200
+      expect(json_body).to eq([{id: game.id},  {id: another_game.id}].as_json)
+    end
+  end
+
+  describe :show do
+    it 'return the given game' do
+      game = Game.generate(height: 2, width: 3, mines: 2)
+      game.save!
+
+      get "/games/#{game.id}"
+
+      expect(response.status).to eq 200
+      assert_response_includes_game_fields(json_body, game)
+    end
+  end
+
+  context 'when the requested game does not exist' do
+    it 'returns a 404 error' do
+      get "/games/123"
+
+      errors = json_body["errors"]
+      error = errors[0]
+      expect(response.status).to eq 404
+      expect(error['detail']).to eq "Couldn't find Game with 'id'=123"
+    end
+  end
+end
+
+def json_body
+  @json_body ||= JSON.parse(response.body)
 end
 
 def assert_response_includes_game_fields(json_response, game)
