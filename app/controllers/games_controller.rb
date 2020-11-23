@@ -2,6 +2,7 @@ class GamesController < ApplicationController
   def create
     begin
       new_game = Game.generate(height: params[:height].to_i, width: params[:width].to_i, mines: params[:mines].to_i)
+
       new_game.save!
     rescue InvalidGameParamError => e
       return render_error e.message, :bad_request
@@ -12,31 +13,20 @@ class GamesController < ApplicationController
 
   def update
     game = Game.find(params[:id])
-    x = params[:x].to_i
-    y = params[:y].to_i
-    action = params[:command]
+    x, y = params[:x].to_i, params[:y].to_i
 
-    update_cell(game, x, y, action)
+    GameCommand.for(params[:command].to_s, game, x, y).exec
+
+    game.save!
 
     head :ok
   rescue ActiveRecord::RecordNotFound => e
     render_error e.message, :not_found
-  rescue InvalidCellCoordinateError => e
+  rescue InvalidCellCoordinateError, InvalidCommandError => e
     render_error e.message, :bad_request
   end
 
   private
-
-  def update_cell(game, x, y, action)
-    if action.to_s.eql? 'red_flag'
-      game.red_flag x.to_i, y.to_i
-    elsif action.to_s.eql? 'question_mark'
-      game.question_mark_flag x.to_i, y.to_i
-    elsif action.to_s.eql? 'uncover'
-      game.uncover_cell x.to_i, y.to_i
-    end
-    game.save!
-  end
 
   def render_error(message, status_code)
     render :json => {

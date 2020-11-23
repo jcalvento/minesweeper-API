@@ -79,6 +79,16 @@ RSpec.describe 'Games', type: :request do
         expect(error['detail']).to eq "Couldn't find Game with 'id'=something"
       end
 
+      it 'returns a 404 error when the given command is invalid' do
+        put "/games", params: { id: game.id, x: 3, y: 4, command: 'invalid' }
+
+        errors = JSON.parse(response.body)["errors"]
+        error = errors[0]
+        expect(response.status).to eq 400
+        expect(errors.size).to eq 1
+        expect(error['detail']).to eq "Invalid game command 'invalid'"
+      end
+
       shared_examples 'returns a 400 response when a param is invalid' do |param_name, request_params|
         it "returns a 400 response when #{param_name} is invalid" do
           put "/games", params: request_params.merge(id: game.id)
