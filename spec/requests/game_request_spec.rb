@@ -45,10 +45,12 @@ RSpec.describe 'Games', type: :request do
 
   describe :update do
     let(:game) do
-      game = Game.generate(height: 4, width: 5, mines: 8)
+      game = Game.generate(height: 4, width: 5, mines: 1)
       game.save!
       game
     end
+
+    before { allow(Game).to receive(:mine_position).and_return 0 }
 
     it 'updates the given cell of the given game' do
       put "/games/#{game.id}", params: { x: 4, y: 3, command: 'uncover' }
@@ -75,6 +77,25 @@ RSpec.describe 'Games', type: :request do
       expect(response.status).to eq 200
       expect(updated_game.cell(1, 2).flag).to eq Cell::QUESTION_MARK_FLAG
       assert_response_includes_game_fields(json_body, updated_game)
+    end
+
+    context 'when the game is already ended' do
+      let(:ended_game) do
+        game = Game.generate(height: 1, width: 1, mines: 1)
+        game.red_flag 0, 0
+        game.save!
+        game
+      end
+
+      it 'does not allow any update' do
+        put "/games/#{ended_game.id}", params: { x: 0, y: 0, command: 'delete_flag' }
+
+        errors = json_body["errors"]
+        error = errors[0]
+        expect(response.status).to eq 400
+        expect(errors.size).to eq 1
+        expect(error['detail']).to eq 'Ended games cannot be updated'
+      end
     end
 
     context 'validations' do

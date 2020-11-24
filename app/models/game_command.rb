@@ -2,6 +2,7 @@ class GameCommand
   UNCOVER = 'uncover'
   RED_FLAG = 'red_flag'
   QUESTION_MARK_FLAG = 'question_mark'
+  DELETE_FLAG = 'delete_flag'
 
   def self.for(action, game, x, y)
     subclass = self.subclasses.detect(
@@ -53,6 +54,16 @@ class QuestionMarkFlag < GameCommand
 
   def exec
     @game.question_mark_flag @x_position, @y_position
+  end
+end
+
+class DeleteFlag < GameCommand
+  def self.can_handle?(action)
+    action.eql? DELETE_FLAG
+  end
+
+  def exec
+    @game.delete_flag @x_position, @y_position
   end
 end
 

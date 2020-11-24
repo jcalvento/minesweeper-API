@@ -17,17 +17,19 @@ class Cell
   alias_method :covered?, :covered
 
   def red_flag
+    return if red_flagged?
+
     updating_game { @flag = RED_FLAG }
 
     @game.red_flagged_mined_cell if mined?
   end
 
   def question_mark_flag
-    updating_game { @flag = QUESTION_MARK_FLAG }
+    updating_red_flag { @flag = QUESTION_MARK_FLAG }
   end
 
   def delete_flag
-    updating_game { @flag = nil }
+    updating_red_flag { @flag = nil }
   end
 
   def flagged?
@@ -51,6 +53,17 @@ class Cell
   end
 
   private
+
+  def updating_red_flag(&block)
+    current_flag = @flag
+    updating_game &block
+
+    @game.deleted_red_flag if red_flagged?(current_flag) and mined?
+  end
+
+  def red_flagged?(current_flag=@flag)
+    current_flag == RED_FLAG
+  end
 
   def updating_game
     yield

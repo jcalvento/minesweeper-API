@@ -33,7 +33,9 @@ RSpec.describe Game, type: :model do
   end
 
   describe '#uncover_cell' do
-    let(:game) { Game.generate(height: 5, width: 5, mines: 8) }
+    let(:game) { Game.generate(height: 5, width: 5, mines: 1) }
+
+    before { allow(Game).to receive(:mine_position).and_return 7 }
 
     it 'marks the given cell as uncovered' do
       x, y = 0, 2
@@ -59,7 +61,7 @@ RSpec.describe Game, type: :model do
         x, y = 0, 2
         game.uncover_cell x, y
 
-        game.uncover_cell x, y
+        expect { game.uncover_cell x, y }.to not_change(game, :uncovered_cells)
 
         assert_is_uncovered(game, x, y)
       end
@@ -67,8 +69,6 @@ RSpec.describe Game, type: :model do
 
     context 'uncovering surrounding cells' do
       let(:game) { Game.generate(height: 4, width: 3, mines: 1) }
-
-      before { allow(Game).to receive(:mine_position).and_return 7 }
 
       it 'when marking the cell as uncovered, all surrounding not mined cells will be uncovered' do
         game.uncover_cell 0, 0
@@ -139,6 +139,25 @@ RSpec.describe Game, type: :model do
 
       assert_is_covered(game, x, y)
     end
+
+    context 'when the cell is mined' do
+      before { allow(Game).to receive(:mine_position).and_return 3 }
+
+      it 'increases mines_flagged count by 1' do
+        x, y = 0, 1
+
+        expect { game.red_flag x, y }.to change(game, :mines_flagged).by(1)
+      end
+
+      context 'and the cell is already flagged' do
+        it 'does not increase mines_flagged count' do
+          x, y = 0, 1
+          game.red_flag x, y
+
+          expect { game.red_flag x, y }.to not_change(game, :mines_flagged)
+        end
+      end
+    end
   end
 
   describe '#question_mark_flag' do
@@ -160,6 +179,29 @@ RSpec.describe Game, type: :model do
 
       assert_is_covered(game, x, y)
     end
+
+    context 'overwriting a red flag' do
+      let(:game) { Game.generate(height: 2, width: 2, mines: 1) }
+
+      before { allow(Game).to receive(:mine_position).and_return 3 }
+
+      it 'removes the red flag and decreases mines flagged count by 1' do
+        x, y = 1, 1
+
+        game.red_flag x, y
+
+        expect { game.question_mark_flag(x, y) }.to change(game, :mines_flagged).by(-1)
+      end
+
+      context 'when the cell is not mined' do
+        it 'does not decrease flagged mines count' do
+          x, y = 0, 0
+          game.red_flag x, y
+
+          expect { game.question_mark_flag(x, y) }.to not_change(game, :mines_flagged)
+        end
+      end
+    end
   end
 
   describe '#delete_flag' do
@@ -167,11 +209,35 @@ RSpec.describe Game, type: :model do
 
     it 'remove the current flag of the given cell' do
       x, y = 2, 1
-      game.question_mark_flag x, y
+      game.question_mark_flag(x, y)
 
-      game.delete_flag x, y
+      game.delete_flag(x, y)
 
       expect(game.cell(x, y)).to_not be_flagged
+    end
+
+    context 'removing a red flag' do
+      before { allow(Game).to receive(:mine_position).and_return 3 }
+
+      it 'decreases flagged mines count by 1' do
+        x, y = 0, 1
+        game.red_flag x, y
+
+        expect { game.delete_flag(x, y) }.to change(game, :mines_flagged).by(-1)
+
+        expect(game.cell(x, y)).to_not be_flagged
+      end
+
+      context 'when the cell is not mined' do
+        it 'does not decrease flagged mines count' do
+          x, y = 0, 0
+          game.red_flag x, y
+
+          expect { game.delete_flag(x, y) }.to not_change(game, :mines_flagged)
+
+          expect(game.cell(x, y)).to_not be_flagged
+        end
+      end
     end
   end
 
@@ -202,6 +268,7 @@ RSpec.describe Game, type: :model do
       end
     end
   end
+
   def assert_is_uncovered(game, x, y)
     expect(game.cell(x, y)).to_not be_covered
   end

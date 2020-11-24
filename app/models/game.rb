@@ -32,6 +32,8 @@ class Game < ApplicationRecord
   end
 
   def uncover_cell(x, y)
+    validate_not_ended
+
     cell(x, y).uncover
   end
 
@@ -43,14 +45,20 @@ class Game < ApplicationRecord
   end
 
   def red_flag(x, y)
+    validate_not_ended
+
     cell(x, y).red_flag
   end
 
   def question_mark_flag(x, y)
+    validate_not_ended
+
     cell(x, y).question_mark_flag
   end
 
   def delete_flag(x, y)
+    validate_not_ended
+
     cell(x, y).delete_flag
   end
 
@@ -80,12 +88,20 @@ class Game < ApplicationRecord
     update_game_status { self.uncovered_cells += 1 }
   end
 
+  def deleted_red_flag
+    self.mines_flagged -= 1
+  end
+
   def end_game_failed
     self.ended = true
     self.result = FAILED
   end
 
   private
+
+  def validate_not_ended
+    raise UpdateEndedGameError.new('Ended games cannot be updated') if ended?
+  end
 
   def update_game_status
     yield
@@ -138,3 +154,4 @@ end
 
 class InvalidGameParamError < RuntimeError; end
 class InvalidCellCoordinateError < RuntimeError; end
+class UpdateEndedGameError < RuntimeError; end

@@ -36,7 +36,7 @@ class GamesController < ApplicationController
     render json: game.as_json
   rescue ActiveRecord::RecordNotFound => e
     render_error e.message, :not_found
-  rescue InvalidCellCoordinateError, InvalidCommandError => e
+  rescue InvalidCellCoordinateError, InvalidCommandError, UpdateEndedGameError => e
     render_error e.message, :bad_request
   end
 
