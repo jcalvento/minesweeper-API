@@ -180,9 +180,11 @@ end
 
 def assert_response_includes_game_fields(json_response, game)
   expect(game.height).to eq(json_response['height'])
+  expect(game.width).to eq(json_response['width'])
   expect(game.mines_flagged).to eq(json_response['mines_flagged'])
   expect(game.uncovered_cells).to eq(json_response['uncovered_cells'])
   expect(game.ended?).to eq(json_response['ended'])
   expect(game.result).to eq(json_response['result'])
   expect(game.cells.as_json).to eq(json_response['cells'])
+  expect(game.created_at.to_s(:iso8601)).to eq(ActiveSupport::TimeZone['UTC'].parse(json_response['created_at']).to_s(:iso8601))
 end

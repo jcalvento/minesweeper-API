@@ -93,11 +93,16 @@ class Game < ApplicationRecord
   end
 
   def end_game_failed
-    self.ended = true
-    self.result = FAILED
+    end_game(FAILED)
   end
 
   private
+
+  def end_game(result)
+    self.ended = true
+    self.result = result
+    self.ended_at = DateTime.current.utc
+  end
 
   def validate_not_ended
     raise UpdateEndedGameError.new('Ended games cannot be updated') if ended?
@@ -110,8 +115,7 @@ class Game < ApplicationRecord
     mines_count = mines.count
 
     if self.mines_flagged.eql?(mines_count) && self.uncovered_cells.eql?(cells_count - mines_count)
-      self.ended = true
-      self.result = SUCCESS
+      self.end_game(SUCCESS)
     end
   end
 

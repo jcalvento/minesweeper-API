@@ -248,23 +248,31 @@ RSpec.describe Game, type: :model do
 
     context 'uncovering the last cells' do
       it 'ends game with success result' do
-        game.red_flag 0, 2
-        game.red_flag 1, 2
-        game.red_flag 2, 2
+        current_date = Time.current.utc
+        Timecop.freeze(current_date) do
+          game.red_flag 0, 2
+          game.red_flag 1, 2
+          game.red_flag 2, 2
 
-        expect{ game.uncover_cell 0, 0 }.to change(game, :ended?).from(false).to(true).
-          and change(game, :result).from(nil).to(Game::SUCCESS)
+          expect{ game.uncover_cell 0, 0 }.to change(game, :ended?).from(false).to(true).
+            and change(game, :result).from(nil).to(Game::SUCCESS).
+              and change(game, :ended_at).from(nil).to(current_date)
+        end
       end
     end
 
     context 'red flag last mine' do
       it 'ends game with success result' do
-        game.uncover_cell 0, 0
-        game.red_flag 0, 2
-        game.red_flag 1, 2
+        current_date = Time.current.utc
+        Timecop.freeze(current_date) do
+          game.uncover_cell 0, 0
+          game.red_flag 0, 2
+          game.red_flag 1, 2
 
-        expect{ game.red_flag 2, 2 }.to change(game, :ended?).from(false).to(true).
-          and change(game, :result).from(nil).to(Game::SUCCESS)
+          expect{ game.red_flag 2, 2 }.to change(game, :ended?).from(false).to(true).
+            and change(game, :result).from(nil).to(Game::SUCCESS).
+              and change(game, :ended_at).from(nil).to(current_date)
+        end
       end
     end
   end
