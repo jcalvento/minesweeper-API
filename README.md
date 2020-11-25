@@ -25,7 +25,7 @@ The following is a list of items (prioritized from most important to least impor
 
 ## Notes
 - Heroku url: https://frozen-citadel-76869.herokuapp.com
-- [API Documentation](./api_doc.yaml)
+- [API Documentation](./api_doc.yaml). You copy and paste it in [Swagger Editor](https://editor.swagger.io) to see it properly
 - [API client](https://github.com/jcalvento/minesweeper-client)
 - Board coordinates are (x, y) where x=0 is the top left column and y=0 is the top left row 
 ```
