@@ -2,7 +2,7 @@
   "name": "minesweeper_API",
   "private": true,
   "engines": {
-    "node": ">=v14.15.1",
+    "node": ">=v12.16.2",
     "npm": ">=6.14.8"
   },
   "dependencies": {
