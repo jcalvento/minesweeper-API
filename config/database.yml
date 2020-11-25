@@ -24,6 +24,7 @@ production:
   <<: *default
   adapter: postgresql
   encoding: unicode
-  database: minesweeper_production
-  username: minesweeper
-  password: <%= ENV['MINESWEEPER_DATABASE_PASSWORD'] %>
+  url:  <%= ENV["DATABASE_URL"] %>
+  pool: <%= ENV["DB_POOL"] || ENV['RAILS_MAX_THREADS'] || 5 %>
+  password: <%= ENV["DATABASE_PASSWORD"] %>
+  username: <%= ENV["DATABASE_USERNAME"] %>
