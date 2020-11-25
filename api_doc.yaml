@@ -168,6 +168,18 @@ definitions:
       result:
         type: "string"
         description: "Ending result"
+      ended_at:
+        type: "string"
+        format: "date-time"
+        description: "Ending date"
+      created_at:
+        type: "string"
+        format: "date-time"
+        description: "Create date"
+      updated_at:
+        type: "string"
+        format: "date-time"
+        description: "Update date"
       cells:
         $ref: "#/definitions/Cell"
     example:
@@ -177,7 +189,10 @@ definitions:
         "mines_flagged": 1,
         "uncovered_cells": 2,
         "ended": true,
-        "result": "string",
+        "result": "SUCCESS",
+        'created_at': '2020-11-25T14:39:20.428Z',
+        'updated_at': '2020-11-25T14:39:36.617Z',
+        "ended_at": '2020-11-25T14:40:36.617Z',
         "cells": {
           "0": {
             "0": {
